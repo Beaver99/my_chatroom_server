@@ -23,3 +23,4 @@ func (msg Msg) readReply(ctx context.Context, conn *websocket.Conn, feild string
 func (msg Msg) ReadReply(ctx context.Context, conn *websocket.Conn, feild string) (interface{}, error){
 	return msg.readReply(ctx, conn, feild)
 }
+

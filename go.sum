@@ -1,3 +1,5 @@
+github.com/GGBooy/client v0.0.0-20210501054701-ea2cb7350d9f h1:jIbd3OlXmX3Ygi20AgoKPa2fKiXb2DUfOmVBCHYsDbs=
+github.com/GGBooy/client v0.0.0-20210501054701-ea2cb7350d9f/go.mod h1:iY+oo4w6USTWxVN0+CziYA9AlDFDiP5D6YOX7ay4j7c=
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
