@@ -13,6 +13,11 @@ type LoginMessage struct {
 	MessageType string // 1
 	Username    string
 	Password    string
+	//Mode        string // indicate one-to-one chatroom 0 or group chatroom 1
+	//ID          string // uid of the peer that this user want to connect to
+}
+type ChatRequestMessage struct{
+	MessageType string // 7
 	Mode        string // indicate one-to-one chatroom 0 or group chatroom 1
 	ID          string // uid of the peer that this user want to connect to
 }

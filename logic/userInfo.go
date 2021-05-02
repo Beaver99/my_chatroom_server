@@ -1,4 +1,4 @@
-package server
+package logic
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-var userInfoDB = initUserInfoRedis()
+//var userAccountDB = initUserInfoRedis()
 
 func initUserInfoRedis() *redis.Client {
 	//log.Println("Redis already connected")
@@ -27,4 +27,8 @@ func initUserInfoRedis() *redis.Client {
 		return nil
 	}
 	return client
+}
+
+func GetUserAccountDB() *redis.Client{
+	return userAccountDB
 }
