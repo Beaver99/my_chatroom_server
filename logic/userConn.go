@@ -11,8 +11,11 @@ type userConnMap struct {
 
 func UserConnMapLoad(userID UUID) ( *websocket.Conn, bool) {
 	ctemp, ok := userConnRegister.uc.Load(userID)
-	c := ctemp.(*websocket.Conn)
-	return c, ok
+	if ok{
+		return ctemp.(*websocket.Conn), ok
+	}else{
+		return nil, ok
+	}
 }
 
 func UserConnMapStore(userID UUID, conn *websocket.Conn) {

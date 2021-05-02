@@ -12,12 +12,19 @@ import (
 func sendOfflineMsg(ctx context.Context, conn *websocket.Conn, userID logic.UUID){
 	var msgs []map[string]interface{}
 	var err error
-	logic.OfflineMsgStoreCollection.Find(bson.M{"userID":string(userID)}).All(&msgs)
+	logic.OfflineMsgStoreCollection.Find(bson.M{"userid":string(userID)}).All(&msgs)
 	// FIXME: ## send and delete!
 	for i := range msgs{
-		err = wsjson.Write(ctx, conn, msgs[i])
+		//// TODO: this is ulgy and slow!
+		//msgs[i]["Msg"] = msgs[i]["msg"]
+		err = wsjson.Write(ctx, conn, msgs[i]["msg"])
 		if err != nil{
 			log.Println(err)
 		}
+	}
+	change, err := logic.OfflineMsgStoreCollection.RemoveAll(bson.M{"userid":string(userID)})
+	if err != nil{
+		log.Println(err)
+		log.Println(change)
 	}
 }

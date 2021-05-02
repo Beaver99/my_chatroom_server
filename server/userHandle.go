@@ -128,8 +128,9 @@ func userHandle(ctx context.Context, conn *websocket.Conn, userID logic.UUID) {
 						continue
 					}
 
+					sendMsg := protocol.Msg(SendMsg)
 					// check msgType
-					msgTypeTemp, err := chatReq.ReadReply(ctx, conn, "MessageType")
+					msgTypeTemp, err := sendMsg.ReadReply(ctx, conn, "MessageType")
 					if err != nil {
 						log.Println(err)
 						continue
