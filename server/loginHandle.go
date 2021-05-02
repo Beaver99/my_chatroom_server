@@ -88,11 +88,12 @@ func loginHandleFunc(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
+	userID := logic.UUID(username)
 
-	userConnMap := logic.GetUserConnMap()
-	// TODO: ## LOCK!
-	userConnMap[logic.UUID(username)] = conn
-	go userHandle(ctx, conn)
+	logic.UserConnMapStore(userID, conn)
+	go userHandle(ctx, conn, userID)
+
+	go sendOfflineMsg(ctx, conn, userID)
 	// 根据读取时的错误执行不同的 Close
 	//if err == nil {
 	//	conn.Close(websocket.StatusNormalClosure, "")

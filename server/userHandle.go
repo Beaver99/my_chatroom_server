@@ -5,14 +5,12 @@ import (
 	"log"
 	"my_chatroom_server/logic"
 	"my_chatroom_server/protocol"
-	"nhooyr.io/websocket/wsjson"
 
-	//"github.com/GGBooy/client/"
 	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
-func userHandle(ctx context.Context, conn *websocket.Conn) {
-	userConnMap := logic.GetUserConnMap()
+func userHandle(ctx context.Context, conn *websocket.Conn, userID logic.UUID) {
 	// tell the client that he/she has logged in
 	protocol.SendMsg(ctx, conn, protocol.ReplyMessage{
 		MessageType: "0",
@@ -20,12 +18,12 @@ func userHandle(ctx context.Context, conn *websocket.Conn) {
 		Err:         "",
 	})
 
-	// TODO: ## set deadline for userHandle
+	// TODO: set deadline for userHandle
 
 	ChatReq := make(map[string]interface{}, 32)
 	SendMsg := make(map[string]interface{}, 8)
 
-	for i:=0;i<=6;i++{
+	for {
 
 		//ChatReq := make(map[string]interface{})
 		err := wsjson.Read(ctx, conn, &ChatReq)
@@ -74,46 +72,94 @@ func userHandle(ctx context.Context, conn *websocket.Conn) {
 			userAccountDB := logic.GetUserAccountDB()
 			isValidID, _ := userAccountDB.Exists(ctx, couterID).Result()
 			if isValidID == 1 {
+				// FIXME: delete this later
+				protocol.SendMsg(ctx, conn, protocol.ReplyMessage{
+					MessageType: "0",
+					State:       true,
+					Err:         "",
+				})
 				// now we can constantly chat with the peer until the client switch to another peer or log out
 				// TODO: offline chat
 				// TODO: send file
-				if couterConn, ok := userConnMap[logic.UUID(couterID)]; ok {
-					for {
-						err := wsjson.Read(ctx, conn, &SendMsg)
-						if err != nil {
-							log.Println("read json error:", err)
-							continue
-						}
 
-						// check msgType
-						msgTypeTemp, err := chatReq.ReadReply(ctx, conn, "MessageType")
-						if err != nil {
-							log.Println(err)
-							continue
-						}
-						msgType := msgTypeTemp.(string)
-						if msgType == "2" {
-							wsjson.Write(ctx, couterConn, SendMsg)
-						}else if msgType == "7"{
-							log.Println("the client switch to another peer, but this feature is not support yet.")
-							continue
-						} else {
-							//protocol.SendMsg(ctx, conn, protocol.ReplyMessage{
-							//	MessageType: "0",
-							//	State:       false,
-							//	Err:         "Wrong mesage type! You are supposed to send 'SendMsg' type message.",
-							//})
-							log.Println("this client is supposed to send 'SendMessage' or 'ChatRequest' type message but send:", msgType, "type message")
-							continue
-						}
+				//if couterConn, ok := logic.UserConnMapLoad(logic.UUID(couterID)); ok {
+				//	// read from the client and decide what to do.
+				//	for {
+				//		err := wsjson.Read(ctx, conn, &SendMsg)
+				//		if err != nil {
+				//			log.Println("read json error:", err)
+				//			continue
+				//		}
+				//
+				//		// check msgType
+				//		msgTypeTemp, err := chatReq.ReadReply(ctx, conn, "MessageType")
+				//		if err != nil {
+				//			log.Println(err)
+				//			continue
+				//		}
+				//		msgType := msgTypeTemp.(string)
+				//		if msgType == "2" {
+				//			wsjson.Write(ctx, couterConn, SendMsg)
+				//		}else if msgType == "7"{
+				//			// TODO: switch peer
+				//			log.Println("the client switch to another peer, but this feature is not support yet.")
+				//			continue
+				//		}else if msgType == "8"{
+				//			logic.UserConnMapDelete(userID)
+				//			log.Println("the client: ", userID, "has logged out.")
+				//			return
+				//		} else {
+				//			log.Println("this client is sending improper type message but send:", msgType, "type message")
+				//			continue
+				//		}
+				//	}
+				//
+				//} else {
+				//	log.Println("the counterpart has not logged yet.")
+				//	continue
+				//}
+
+				couterConn, isLogin := logic.UserConnMapLoad(logic.UUID(couterID))
+				// read from the client and decide what to do.
+				for {
+					err := wsjson.Read(ctx, conn, &SendMsg)
+					if err != nil {
+						log.Println("read json error:", err)
+						continue
 					}
 
-				} else {
-					log.Println("the counterpart has not logged yet.")
-					continue
+					// check msgType
+					msgTypeTemp, err := chatReq.ReadReply(ctx, conn, "MessageType")
+					if err != nil {
+						log.Println(err)
+						continue
+					}
+					msgType := msgTypeTemp.(string)
+					if msgType == "2" {
+						if isLogin{
+							wsjson.Write(ctx, couterConn, SendMsg)
+						}else{
+							// write to DB
+							logic.OfflineMsgStoreCollection.Insert(logic.OfflineMsg{
+								UserID: logic.UUID(couterID),
+								Msg: SendMsg,
+							})
+						}
+					}else if msgType == "7"{
+						// TODO: switch peer
+						log.Println("the client switch to another peer, but this feature is not support yet.")
+						continue
+					}else if msgType == "8"{
+						logic.UserConnMapDelete(userID)
+						log.Println("the client: ", userID, "has logged out.")
+						return
+					} else {
+						log.Println("this client is sending improper type message but send:", msgType, "type message")
+						continue
+					}
 				}
 
-				continue
+
 			} else {
 				protocol.SendMsg(ctx, conn, protocol.ReplyMessage{
 					MessageType: "0",

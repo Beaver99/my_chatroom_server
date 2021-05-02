@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"my_chatroom_server/logic"
 	"net/http"
 
 	//"my_chatroom_server/server"
@@ -27,6 +28,8 @@ func main() {
 	fmt.Println(banner, addr)
 
 	server.RegisterHandle()
+
+	defer logic.OfflineMsgStoreSession.Close()
 
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
