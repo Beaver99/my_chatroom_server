@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/GGBooy/message"
 	"github.com/go-redis/redis/v8"
 	"log"
 	"my_chatroom_server/logic"
@@ -43,7 +44,7 @@ func loginHandleFunc(w http.ResponseWriter, req *http.Request) {
 	}
 	msgType := msgTypeTemp.(string)
 	if msgType != "1" {
-		protocol.SendMsg(ctx, conn, protocol.ReplyMessage{
+		protocol.SendMsg(ctx, conn, message.ReplyMessage{
 			MessageType: "0",
 			State:       false,
 			Err:         "Wrong mesage type! You are supposed to send 'LoginMessage' type message.",
@@ -79,7 +80,7 @@ func loginHandleFunc(w http.ResponseWriter, req *http.Request) {
 	}else if err ==nil{//user exists, check its psw
 		//log.Println("psw: ", psw, "password: ", password)
 		if psw != password{
-			protocol.SendMsg(ctx, conn, protocol.ReplyMessage{
+			protocol.SendMsg(ctx, conn, message.ReplyMessage{
 				MessageType: "0",
 				State:       false,
 				Err:         "Wrong Username-Password pair!",
