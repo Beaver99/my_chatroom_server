@@ -8,7 +8,8 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 // TODO: for loop compatiblity
-func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMsg map[string]interface{}, userID UUID){
+func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMsg map[string]interface{},
+userID UUID){
 		userAccountDB := GetUserAccountDB()
 		isValidID, _ := userAccountDB.Exists(ctx, string(couterID)).Result()
 		if isValidID == 1 {
@@ -21,7 +22,7 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMs
 			// now we can constantly chat with the peer until the client switch to another peer or log out
 			// TODO: send file
 
-			couterConn, isLogin := UserConnMapLoad(UUID(couterID))
+			//couterConn, isLogin := UserConnMapLoad(UUID(couterID))
 			// read from the client and decide what to do.
 			for {
 				err := wsjson.Read(ctx, conn, &SendMsg)
@@ -39,7 +40,7 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMs
 				}
 				msgType := msgTypeTemp.(string)
 				if msgType == "2" || msgType == "3" || msgType == "4" || msgType == "5" || msgType == "6"{
-					if isLogin{
+					if 	couterConn, isLogin := UserConnMapLoad(UUID(couterID)); isLogin{
 						wsjson.Write(ctx, couterConn, SendMsg)
 					}else{
 						// write to DB
@@ -55,7 +56,7 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMs
 				}else if msgType == "8"{
 					// FIXME: invalid logout implementation
 					UserConnMapDelete(userID)
-					log.Println("the client: ", userID, "has logged out.")
+					log.Println("the client: ", userID, " has logged out")
 					return
 				} else {
 					log.Println("this client is sending improper type message but send:", msgType, "type message")

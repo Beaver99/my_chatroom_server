@@ -89,6 +89,7 @@ func loginHandleFunc(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
+	log.Println("the client: ",username, " has logged in")
 	userID := logic.UUID(username)
 
 	logic.UserConnMapStore(userID, conn)
