@@ -7,9 +7,15 @@ var userConnRegister userConnMap
 
 // FIXME: session set wrong
 // FIXME: global session is left close
-var
+var MonogoDBSession           = InitOfflineMsgStore()
 
 var (
-	OfflineMsgStoreSession = InitOfflineStore()
-	OfflineMsgStoreCollection = OfflineMsgStoreSession.DB("OfflineMessage").C("to_be_sent")
+	OfflineMsgStoreCollection = MonogoDBSession.DB("OfflineStore").C("Message")
+)
+
+
+var(
+	SingleChatFileStoreCollection = MonogoDBSession.DB("OfflineStore").C("SingleChatFile")
+	//GroupChatFileStoreCollection = MonogoDBSession.DB("OfflineStore").C("GroupChatFile")
+
 )

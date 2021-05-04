@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/GGBooy/message"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"io"
 	"log"
 	"nhooyr.io/websocket"
@@ -23,9 +24,11 @@ import (
 //	}
 //	return false, err
 //}
-
+type fileID struct{
+	File_id bson.ObjectId `bson:"file_id"`
+}
 // 发送文件
-func SendFile(ctx context.Context, c *websocket.Conn, msg map[string]interface{}) {
+func SendFile(ctx context.Context, ReceiverID UUID, c *websocket.Conn, msg map[string]interface{}) {
 	filename := msg["Filename"].(string)
 	sendername := msg["Sendername"].(string)
 	offsetStr := msg["Offset"].(string)
@@ -37,14 +40,37 @@ func SendFile(ctx context.Context, c *websocket.Conn, msg map[string]interface{}
 
 	session, err := mgo.Dial("mongodb://127.0.0.1:27017")
 	defer session.Close()
-	f, err := session.DB("gridfs").GridFS("fs").Open(filename)
-	if err != nil {
-		fmt.Println("can't open this file")
-		log.Println(err)
-		return
-	}
-	defer f.Close()
-	SendSeg(ctx, c, f, sendername, offsetInt)
+	// get triple
+	var fileIDs fileID
+	//TODO: send a dup file
+	query := bson.M{"sender_id": UUID(sendername), "receiver_id": ReceiverID, "filename": filename}
+	//SingleChatFileStoreCollection.Find(query).Select(bson.M{"file_id": 1, "_id": 0}).All(&fileIDs)
+
+	SingleChatFileStoreCollection.Find(query).Select(bson.M{"file_id": 1, "_id": 0}).One(&fileIDs)
+
+	//log.Println(filename,"Here are the fileIDs that are found:", fileIDs,reflect.TypeOf(fileIDs))
+	//for i := range fileIDs {
+	//	buff, _ := bson.Marshal(fileIDs)
+	//	var fileIdMap fileID
+	//	bson.Unmarshal(buff, &fileIdMap)
+	//	fmt.Println(fileIdMap,reflect.TypeOf(fileIdMap))
+		f, err := session.DB("gridfs").GridFS("fs").OpenId(fileIDs.File_id)
+		if err != nil {
+			fmt.Println("can't open this file")
+			log.Println(err)
+			return
+		}
+		defer f.Close()
+		SendSeg(ctx, c, f, sendername, offsetInt)
+	//}
+	//f, err := session.DB("gridfs").GridFS("fs").FindID(fileIDs[i]).Open(filename)
+	//if err != nil {
+	//	fmt.Println("can't open this file")
+	//	log.Println(err)
+	//	return
+	//}
+	//defer f.Close()
+	//SendSeg(ctx, c, f, sendername, offsetInt)
 }
 
 func SendSeg(ctx context.Context, c *websocket.Conn, f *mgo.GridFile, sendername string, offsetInt int64) {
@@ -81,7 +107,7 @@ func SendSeg(ctx context.Context, c *websocket.Conn, f *mgo.GridFile, sendername
 	}
 }
 
-func RecvSeg(ctx context.Context, c *websocket.Conn, msg map[string]interface{}) {
+func RecvSeg(ctx context.Context, ReceiverID UUID, c *websocket.Conn, msg map[string]interface{}) {
 	sendername := msg["Sendername"].(string)
 	filename := msg["Filename"].(string)
 	session, err := mgo.Dial("mongodb://127.0.0.1:27017")
@@ -137,6 +163,12 @@ func RecvSeg(ctx context.Context, c *websocket.Conn, msg map[string]interface{})
 		if posInt == fileLenInt {
 			fmt.Println("receive over")
 			SendNotify(ctx, c, sendername, filename, fileLenStr)
+			SingleChatFileTripleInsert(SingleChatFileTriple{
+				SenderID:   UUID(sendername),
+				ReceiverID: ReceiverID,
+				Filename:   filename,
+				FileID:     f.Id(),
+			})
 			return
 		}
 		msg = <-chFile

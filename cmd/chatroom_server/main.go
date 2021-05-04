@@ -29,7 +29,7 @@ func main() {
 
 	server.RegisterHandle()
 
-	defer logic.OfflineMsgStoreSession.Close()
+	defer logic.MonogoDBSession.Close()
 
 	log.Fatal(http.ListenAndServe(addr, nil))
 }

@@ -8,8 +8,14 @@ type OfflineMsg struct{
 	UserID UUID
 	Msg map[string]interface{}
 }
+type SingleChatFileTriple struct{
+	SenderID UUID `bson:"sender_id"`
+	ReceiverID UUID `bson:"receiver_id"`
+	Filename string `bson:"filename"`
+	FileID interface{} `bson:"file_id"`
+}
 
-func InitOfflineStore() *mgo.Session{
+func InitOfflineMsgStore() *mgo.Session{
 	session, err := mgo.Dial("localhost:27017")
 	if err != nil {
 		panic(err)
@@ -19,4 +25,8 @@ func InitOfflineStore() *mgo.Session{
 
 	//OfflineMessage := session.DB("OfflineMessage").C("to be sent")
 	return session
+}
+
+func SingleChatFileTripleInsert(record SingleChatFileTriple){
+	SingleChatFileStoreCollection.Insert(record)
 }

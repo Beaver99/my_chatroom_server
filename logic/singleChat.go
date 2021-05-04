@@ -45,7 +45,7 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 				continue
 			}
 			msgType := msgTypeTemp.(string)
-			counterConn, isLogin := UserConnMapLoad(UUID(counterID));
+			counterConn, isLogin := UserConnMapLoad(counterID);
 
 			if msgType == "2" {
 				if isLogin {
@@ -58,12 +58,12 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 					})
 				}
 			} else if msgType == "4" {
-				SendFile(ctx, conn, SendMsgtemp)
+				SendFile(ctx, userID,conn, SendMsgtemp)
 			} else if msgType == "6" {
 				if SendMsgtemp["Offset"].(string) == "0" {
 					// FIXME: offline?
-					counterConn, _ := UserConnMapLoad(UUID(counterID))
-					go RecvSeg(ctx, counterConn, SendMsgtemp)
+					counterConn, _ := UserConnMapLoad(counterID)
+					go RecvSeg(ctx, counterID,counterConn, SendMsgtemp)
 				} else {
 					chFile <- SendMsgtemp
 				}
