@@ -2,6 +2,8 @@ github.com/GGBooy/message v0.0.0-20210503024601-700dec657128 h1:elGUEIgRGz5yNEvt
 github.com/GGBooy/message v0.0.0-20210503024601-700dec657128/go.mod h1:DeUQEgvc42T6yCkHIKCRt5FmqSGiDcxZz9zVGi3ev1w=
 github.com/GGBooy/message v0.0.0-20210503030520-7537baf94e33 h1:oxHqJ+ru9OMUZq/duIcz5UEm/a5csylAQmb+T0ANcxs=
 github.com/GGBooy/message v0.0.0-20210503030520-7537baf94e33/go.mod h1:DeUQEgvc42T6yCkHIKCRt5FmqSGiDcxZz9zVGi3ev1w=
+github.com/GGBooy/message v0.0.0-20210503151534-0c62f2925b8f h1:6NZRWvukJLtxNaO5R8qpyyCFX77LZWuTIvYvLL2ZBME=
+github.com/GGBooy/message v0.0.0-20210503151534-0c62f2925b8f/go.mod h1:bCChTghMwxywUMLj6yF87I2TWxNy47yBRDRbAOooTLo=
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
