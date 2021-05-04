@@ -11,10 +11,10 @@ import (
 var chFile = make(chan map[string]interface{}, 64)
 
 // TODO: for loop compatiblity
-func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMsg map[string]interface{},
+func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendMsg map[string]interface{},
 	userID UUID) {
 	userAccountDB := GetUserAccountDB()
-	isValidID, _ := userAccountDB.Exists(ctx, string(couterID)).Result()
+	isValidID, _ := userAccountDB.Exists(ctx, string(counterID)).Result()
 	if isValidID == 1 {
 		// FIXME: delete this later
 		protocol.SendMsg(ctx, conn, protocol.ReplyMessage{
@@ -25,16 +25,18 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMs
 		// now we can constantly chat with the peer until the client switch to another peer or log out
 		// TODO: send file
 
-		//couterConn, isLogin := UserConnMapLoad(UUID(couterID))
+		//couterConn, isLogin := UserConnMapLoad(UUID(counterID))
 		// read from the client and decide what to do.
 		for {
+			// TOFIGUREOUT: why this works
 			SendMsg = nil
 			err := wsjson.Read(ctx, conn, &SendMsg)
 			if err != nil {
 				log.Println("read json error:", err)
 				continue
 			}
-			temp := SendMsg
+			// TOFIGUREOUT: why add this SendMsgtemp
+			SendMsgtemp := SendMsg
 			sendMsg := protocol.Msg(SendMsg)
 			// check msgType
 			msgTypeTemp, err := sendMsg.ReadReply(ctx, conn, "MessageType")
@@ -43,24 +45,27 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, couterID UUID, SendMs
 				continue
 			}
 			msgType := msgTypeTemp.(string)
+			counterConn, isLogin := UserConnMapLoad(UUID(counterID));
+
 			if msgType == "2" {
-				if couterConn, isLogin := UserConnMapLoad(UUID(couterID)); isLogin {
-					wsjson.Write(ctx, couterConn, SendMsg)
+				if isLogin {
+					wsjson.Write(ctx, counterConn, SendMsg)
 				} else {
 					// write to DB
 					OfflineMsgStoreCollection.Insert(OfflineMsg{
-						UserID: couterID,
+						UserID: counterID,
 						Msg:    SendMsg,
 					})
 				}
 			} else if msgType == "4" {
-				SendFile(ctx, conn, temp)
+				SendFile(ctx, conn, SendMsgtemp)
 			} else if msgType == "6" {
-				if temp["Offset"].(string) == "0" {
-					couterConn, _ := UserConnMapLoad(UUID(couterID))
-					go RecvSeg(ctx, couterConn, temp)
+				if SendMsgtemp["Offset"].(string) == "0" {
+					// FIXME: offline?
+					counterConn, _ := UserConnMapLoad(UUID(counterID))
+					go RecvSeg(ctx, counterConn, SendMsgtemp)
 				} else {
-					chFile <- temp
+					chFile <- SendMsgtemp
 				}
 			} else if msgType == "7" {
 				// TODO: switch peer

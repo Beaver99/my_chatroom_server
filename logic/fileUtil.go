@@ -10,20 +10,19 @@ import (
 	"log"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
-	"os"
 	"strconv"
 )
 
-func fileExist(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
-}
+//func fileExist(path string) (bool, error) {
+//	_, err := os.Stat(path)
+//	if err == nil {
+//		return true, nil
+//	}
+//	if os.IsNotExist(err) {
+//		return false, nil
+//	}
+//	return false, err
+//}
 
 // 发送文件
 func SendFile(ctx context.Context, c *websocket.Conn, msg map[string]interface{}) {
@@ -98,6 +97,7 @@ func RecvSeg(ctx context.Context, c *websocket.Conn, msg map[string]interface{})
 	//	log.Println(err)
 	//	return
 	//}
+	// ##
 	f, _ := session.DB("gridfs").GridFS("fs").Create(filename)
 	defer f.Close()
 
