@@ -27,13 +27,15 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 
 		//couterConn, isLogin := UserConnMapLoad(UUID(counterID))
 		// read from the client and decide what to do.
+		defer conn.Close(websocket.StatusGoingAway, "server closed")
+		defer log.Println("the client: ", userID, " has logged out")
 		for {
 			// TOFIGUREOUT: why this works
 			SendMsg = nil
 			err := wsjson.Read(ctx, conn, &SendMsg)
 			if err != nil {
 				log.Println("read json error:", err)
-				continue
+				return
 			}
 			// TOFIGUREOUT: why add this SendMsgtemp
 			SendMsgtemp := SendMsg
@@ -45,7 +47,7 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 				continue
 			}
 			msgType := msgTypeTemp.(string)
-			counterConn, isLogin := UserConnMapLoad(counterID);
+			counterConn, isLogin := UserConnMapLoad(counterID)
 
 			if msgType == "2" {
 				if isLogin {
@@ -58,12 +60,12 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 					})
 				}
 			} else if msgType == "4" {
-				SendFile(ctx, userID,conn, SendMsgtemp)
+				go SendFile(ctx, userID, conn, SendMsgtemp)
 			} else if msgType == "6" {
 				if SendMsgtemp["Offset"].(string) == "0" {
 					// FIXME: offline?
 					counterConn, _ := UserConnMapLoad(counterID)
-					go RecvSeg(ctx, counterID,counterConn, SendMsgtemp)
+					go RecvSeg(ctx, counterID, counterConn, SendMsgtemp)
 				} else {
 					chFile <- SendMsgtemp
 				}
@@ -74,7 +76,6 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 			} else if msgType == "8" {
 				// FIXME: invalid logout implementation
 				UserConnMapDelete(userID)
-				log.Println("the client: ", userID, " has logged out")
 				return
 			} else {
 				log.Println("this client is sending improper type message but send:", msgType, "type message")
