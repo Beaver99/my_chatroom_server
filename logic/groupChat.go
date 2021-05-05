@@ -67,7 +67,7 @@ func GroupChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendMs
 				}
 			}
 		} else if msgType == "4" {
-			go SendFile(ctx, userID, conn, SendMsgtemp)
+			go SendFile(ctx, counterID, conn, SendMsgtemp)
 		} else if msgType == "6" {
 			if SendMsgtemp["Offset"].(string) == "0" {
 				// FIXME: offline?
