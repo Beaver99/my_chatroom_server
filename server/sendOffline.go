@@ -16,7 +16,6 @@ func sendOfflineMsg(ctx context.Context, conn *websocket.Conn, userID logic.UUID
 	// FIXME: ## send and delete!
 	for i := range msgs{
 		//// TODO: this is ulgy and slow!
-		//msgs[i]["Msg"] = msgs[i]["msg"]
 		err = wsjson.Write(ctx, conn, msgs[i]["msg"])
 		if err != nil{
 			log.Println(err)

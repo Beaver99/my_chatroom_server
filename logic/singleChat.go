@@ -64,8 +64,11 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 			} else if msgType == "6" {
 				if SendMsgtemp["Offset"].(string) == "0" {
 					// FIXME: offline?
-					counterConn, _ := UserConnMapLoad(counterID)
-					go RecvSeg(ctx, counterID, counterConn, SendMsgtemp)
+					done := make(chan bool)
+					go RecvSeg(ctx, counterID, SendMsgtemp,done)
+
+					counterIDs := []string{string(counterID)}
+					go NotifyAll(ctx,counterIDs , SendMsg, done)
 				} else {
 					chFile <- SendMsgtemp
 				}

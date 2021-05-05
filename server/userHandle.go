@@ -76,7 +76,8 @@ func userHandle(ctx context.Context, conn *websocket.Conn, userID logic.UUID) {
 
 		} else if mode == "1" {
 			// TODO: group chat
-			continue
+			logic.GroupChat(ctx, conn, couterID, SendMsg, userID)
+			return
 		} else {
 			log.Println("Illegal 'mode' value: ", mode)
 			continue

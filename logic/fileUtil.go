@@ -111,7 +111,8 @@ func SendSeg(ctx context.Context, c *websocket.Conn, f *mgo.GridFile, sendername
 	}
 }
 
-func RecvSeg(ctx context.Context, ReceiverID UUID, c *websocket.Conn, msg map[string]interface{}) {
+func RecvSeg(ctx context.Context, ReceiverID UUID, msg map[string]interface{},
+	Done chan<- bool) {
 	sendername := msg["Sendername"].(string)
 	filename := msg["Filename"].(string)
 	session, err := mgo.Dial("mongodb://127.0.0.1:27017")
@@ -166,7 +167,9 @@ func RecvSeg(ctx context.Context, ReceiverID UUID, c *websocket.Conn, msg map[st
 		}
 		if posInt == fileLenInt {
 			fmt.Println("receive over")
-			SendNotify(ctx, c, sendername, filename, fileLenStr)
+			//SendNotify(ctx, c, sendername, filename, fileLenStr)
+			//  tell the FileNotifyMsg Sender to send 3 to all members.
+			Done <- true
 			SingleChatFileTripleInsert(SingleChatFileTriple{
 				SenderID:   UUID(sendername),
 				ReceiverID: ReceiverID,
@@ -179,14 +182,47 @@ func RecvSeg(ctx context.Context, ReceiverID UUID, c *websocket.Conn, msg map[st
 	}
 }
 
-func SendNotify(ctx context.Context, c *websocket.Conn, sendername string, filename string, lengthStr string) {
-	notifyMsg := message.FileNotifyMessage{
-		MessageType: "3",
-		Sendername:  sendername,
-		Filename:    filename,
-		Length:      lengthStr,
+func NotifyAll(ctx context.Context, ReceiverIDs []string, SendMsg map[string]interface{},
+	Done <-chan bool) {
+
+	isDone := <- Done
+	if isDone{
+		for i := range ReceiverIDs {
+			go SendNotify(ctx, ReceiverIDs[i],SendMsg)
+		}
+	}else{
+		return
 	}
-	wsjson.Write(ctx, c, notifyMsg)
+}
+
+func SendNotify(ctx context.Context,ReceiverID string, msg map[string]interface{}) {
+
+	sendername := msg["Sendername"].(string)
+	filename := msg["Filename"].(string)
+	fileLenStr := msg["Length"].(string)
+
+	counterConn, isLogin := UserConnMapLoad(UUID(ReceiverID))
+	if isLogin{
+		notifyMsg := message.FileNotifyMessage{
+			MessageType: "3",
+			Sendername:  sendername,
+			Filename:    filename,
+			Length:      fileLenStr,
+		}
+		wsjson.Write(ctx, counterConn, notifyMsg)
+	}else{
+		NotifyMsgMap := map[string]interface{}{
+			"MessageType": "3",
+			"Sendername":  sendername,
+			"Filename":    filename,
+			"Length":      fileLenStr,
+		}
+		OfflineMsgStoreCollection.Insert(OfflineMsg{
+			UserID: UUID(ReceiverID),
+			Msg:    NotifyMsgMap,
+		})
+	}
+
 }
 
 func WriteSeg(ctx context.Context, c *websocket.Conn, buffer []byte, offsetInt int64) {
