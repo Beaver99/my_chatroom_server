@@ -24,9 +24,10 @@ import (
 //	}
 //	return false, err
 //}
-type fileID struct{
+type fileID struct {
 	File_id bson.ObjectId `bson:"file_id"`
 }
+
 // 发送文件
 func SendFile(ctx context.Context, ReceiverID UUID, c *websocket.Conn, msg map[string]interface{}) {
 	filename := msg["Filename"].(string)
@@ -54,14 +55,14 @@ func SendFile(ctx context.Context, ReceiverID UUID, c *websocket.Conn, msg map[s
 	//	var fileIdMap fileID
 	//	bson.Unmarshal(buff, &fileIdMap)
 	//	fmt.Println(fileIdMap,reflect.TypeOf(fileIdMap))
-		f, err := session.DB("gridfs").GridFS("fs").OpenId(fileIDs.File_id)
-		if err != nil {
-			fmt.Println("can't open this file")
-			log.Println(err)
-			return
-		}
-		defer f.Close()
-		SendSeg(ctx, c, f, sendername, offsetInt)
+	f, err := session.DB("gridfs").GridFS("fs").OpenId(fileIDs.File_id)
+	if err != nil {
+		fmt.Println("can't open this file")
+		log.Println(err)
+		return
+	}
+	defer f.Close()
+	SendSeg(ctx, c, f, sendername, offsetInt)
 	//}
 	//f, err := session.DB("gridfs").GridFS("fs").FindID(fileIDs[i]).Open(filename)
 	//if err != nil {
@@ -102,7 +103,10 @@ func SendSeg(ctx context.Context, c *websocket.Conn, f *mgo.GridFile, sendername
 			Offset:      offsetStr,
 			Data:        buffer[:num],
 		}
-		wsjson.Write(ctx, c, fileseg)
+		err = wsjson.Write(ctx, c, fileseg)
+		if err != nil {
+			return
+		}
 		offsetInt = offsetInt + int64(num)
 	}
 }
