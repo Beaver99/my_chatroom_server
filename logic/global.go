@@ -19,3 +19,5 @@ var(
 	//GroupChatFileStoreCollection = MonogoDBSession.DB("OfflineStore").C("GroupChatFile")
 
 )
+
+var chFile = make(chan map[string]interface{}, 64)

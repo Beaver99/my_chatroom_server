@@ -3,15 +3,15 @@ package logic
 import (
 	"context"
 	"log"
+
 	"my_chatroom_server/protocol"
+
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
 
-//var chFile = make(chan map[string]interface{}, 64)
-
 // TODO: for loop compatiblity
-func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendMsg map[string]interface{},
+func GroupChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendMsg map[string]interface{},
 	userID UUID) {
 	userAccountDB := GetUserAccountDB()
 	isValidID, _ := userAccountDB.Exists(ctx, string(counterID)).Result()
@@ -93,3 +93,4 @@ func SingleChat(ctx context.Context, conn *websocket.Conn, counterID UUID, SendM
 		return
 	}
 }
+
